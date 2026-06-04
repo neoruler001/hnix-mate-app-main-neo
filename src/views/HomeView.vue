@@ -1,218 +1,25 @@
 <template>
   <div class="home-container d-flex h-100" style="max-height: 100vh; overflow: hidden;">
 
-    <!-- 토스트 알림 -->
-    <Teleport to="body">
-      <Transition name="toast-fade">
-        <div v-if="toast.show" :class="['app-toast', `app-toast--${toast.type}`]">
-          <i :class="['bi', toast.type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill']"></i>
-          <span>{{ toast.text }}</span>
-        </div>
-      </Transition>
-    </Teleport>
-
     <!-- 접근 거부 알림 -->
     <Teleport to="body">
       <Transition name="toast-fade">
-        <div v-if="accessDeniedMessage" class="app-toast app-toast--danger">
+        <div v-if="accessDeniedMessage" class="access-denied-toast">
           <i class="bi bi-exclamation-triangle-fill"></i>
           <span>{{ accessDeniedMessage }}</span>
         </div>
       </Transition>
     </Teleport>
 
-    <!-- 로그인/회원가입 모달 -->
-    <Teleport to="body">
-      <div v-if="showLoginModal" class="modal-backdrop-custom" @click.self="closeModal">
-        <div class="login-modal p-4 rounded-4 shadow-lg">
-          <!-- 헤더 -->
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="d-flex align-items-center gap-2">
-              <img src="/HNIX-CI.png" alt="HNIX" style="height:20px;" />
-              <span class="fw-bold text-primary-ci fs-5">HNIX MATE</span>
-            </div>
-            <button class="btn-close" @click="closeModal"></button>
-          </div>
+    <!-- 사이드바 컴포넌트 -->
+    <AppSidebar
+      ref="sidebarRef"
+      @login="onLogin"
+      @logout="onLogout"
+      @history-select="selectHistory"
+      @new-chat="resetToHome"
+    />
 
-          <!-- 탭 -->
-          <div class="auth-tabs d-flex mb-4">
-            <button class="auth-tab flex-grow-1" :class="{ active: authMode === 'login' }" @click="authMode = 'login'">
-              로그인
-            </button>
-            <button class="auth-tab flex-grow-1" :class="{ active: authMode === 'register' }" @click="authMode = 'register'">
-              회원가입
-            </button>
-          </div>
-
-          <!-- 알림 -->
-          <div v-if="loginAlert.show" :class="`alert alert-${loginAlert.type} py-2 small mb-3`">
-            {{ loginAlert.text }}
-          </div>
-
-          <!-- 로그인 폼 -->
-          <form v-if="authMode === 'login'" @submit.prevent="doLogin">
-            <div class="mb-3">
-              <label class="form-label fw-semibold small">이메일</label>
-              <input v-model="loginForm.email" type="email" class="form-control" placeholder="name@company.com" required />
-            </div>
-            <div class="mb-4">
-              <label class="form-label fw-semibold small">비밀번호</label>
-              <input v-model="loginForm.password" type="password" class="form-control" placeholder="비밀번호 입력" required />
-            </div>
-            <button type="submit" class="btn btn-primary-ci w-100 fw-bold" :disabled="loginLoading">
-              <span v-if="loginLoading" class="spinner-border spinner-border-sm me-2"></span>
-              로그인
-            </button>
-          </form>
-
-          <!-- 회원가입 폼 -->
-          <form v-else @submit.prevent="doRegister">
-            <div class="row g-3 mb-3">
-              <div class="col-12">
-                <label class="form-label fw-semibold small">이메일 <span class="text-danger">*</span></label>
-                <input v-model="registerForm.email" type="email" class="form-control" placeholder="name@company.com" required />
-              </div>
-              <div class="col-6">
-                <label class="form-label fw-semibold small">이름 <span class="text-danger">*</span></label>
-                <input v-model="registerForm.name" type="text" class="form-control" placeholder="홍길동" required />
-              </div>
-              <div class="col-6">
-                <label class="form-label fw-semibold small">연락처</label>
-                <input v-model="registerForm.phone" type="text" class="form-control" placeholder="010-0000-0000" />
-              </div>
-              <div class="col-12">
-                <label class="form-label fw-semibold small">비밀번호 <span class="text-danger">*</span></label>
-                <input v-model="registerForm.password" type="password" class="form-control" placeholder="비밀번호 입력" required />
-              </div>
-              <div class="col-12">
-                <label class="form-label fw-semibold small">비밀번호 확인 <span class="text-danger">*</span></label>
-                <input v-model="registerForm.passwordConfirm" type="password" class="form-control"
-                  :class="registerForm.passwordConfirm && registerForm.password !== registerForm.passwordConfirm ? 'is-invalid' : ''"
-                  placeholder="비밀번호를 다시 입력하세요" required />
-                <div v-if="registerForm.passwordConfirm && registerForm.password !== registerForm.passwordConfirm"
-                  class="invalid-feedback">비밀번호가 일치하지 않습니다.</div>
-              </div>
-              <div class="col-12">
-                <label class="form-label fw-semibold small">소속 팀 <span class="text-danger">*</span></label>
-                <select v-model="registerForm.deptId" class="form-select" required>
-                  <option value="">팀을 선택하세요</option>
-                  <option v-for="d in departments" :key="d.name" :value="d.id" :disabled="!d.id">
-                    {{ d.name }}{{ !d.id ? ' (준비 중)' : '' }}
-                  </option>
-                </select>
-              </div>
-            </div>
-            <button type="submit" class="btn btn-primary-ci w-100 fw-bold" :disabled="loginLoading">
-              <span v-if="loginLoading" class="spinner-border spinner-border-sm me-2"></span>
-              회원가입
-            </button>
-          </form>
-        </div>
-      </div>
-    </Teleport>
-
-    <!-- ── 왼쪽 사이드바 (항상 표시, Claude 구조) ── -->
-    <aside class="app-sidebar" :class="{ collapsed: !sidebarOpen }">
-
-      <!-- 브랜드 + 접기 버튼 -->
-      <div class="sidebar-top" :class="{ 'collapsed-top': !sidebarOpen }">
-        <div v-if="sidebarOpen" class="sidebar-brand" @click="resetToHome" role="button" title="홈으로">
-          <img src="/HNIX-CI.png" alt="HNIX" class="sidebar-logo" />
-          <span class="sidebar-brand-name">HNIX MATE</span>
-        </div>
-        <button class="sidebar-collapse-btn" @click="sidebarOpen = !sidebarOpen" :title="sidebarOpen ? '사이드바 접기' : '사이드바 열기'">
-          <i class="bi" :class="sidebarOpen ? 'bi-layout-sidebar' : 'bi-layout-sidebar-reverse'"></i>
-        </button>
-      </div>
-
-      <!-- 새 채팅 버튼 -->
-      <div class="sidebar-new-chat">
-        <button class="new-chat-btn" @click="resetToHome" :title="!sidebarOpen ? '새 채팅' : ''">
-          <i class="bi bi-plus-lg new-chat-icon"></i>
-          <span v-if="sidebarOpen" class="new-chat-label">새 채팅</span>
-        </button>
-      </div>
-
-      <!-- 네비게이션 메뉴 -->
-      <nav class="sidebar-nav">
-        <button class="sidebar-nav-item" @click="router.push('/upload')" :title="!sidebarOpen ? '지식 학습' : ''">
-          <i class="bi bi-cloud-arrow-up-fill"></i>
-          <span v-if="sidebarOpen">지식 학습</span>
-        </button>
-        <button class="sidebar-nav-item" @click="router.push('/hnllm')" :title="!sidebarOpen ? 'HN LLM' : ''">
-          <i class="bi bi-chat-dots-fill"></i>
-          <span v-if="sidebarOpen">HN LLM</span>
-        </button>
-        <button class="sidebar-nav-item" @click="router.push('/mllm')" :title="!sidebarOpen ? 'HN MLLM' : ''">
-          <i class="bi bi-layout-split"></i>
-          <span v-if="sidebarOpen">HN MLLM</span>
-        </button>
-        <!-- 관리자 전용: 시스템 관리 메뉴 -->
-        <button v-if="currentUser && currentUser.isAdmin" class="sidebar-nav-item" @click="router.push('/admin')" :title="!sidebarOpen ? '시스템 관리' : ''">
-          <i class="bi bi-shield-lock-fill"></i>
-          <span v-if="sidebarOpen">시스템 관리</span>
-        </button>
-      </nav>
-
-      <!-- 대화 기록 (확장 상태에서만) -->
-      <template v-if="sidebarOpen">
-        <div class="sidebar-section-label">최근 항목</div>
-        <div class="sidebar-body">
-          <div v-if="historyLoading" class="sidebar-state-msg">
-            <div class="spinner-border spinner-border-sm opacity-40"></div>
-            <span>불러오는 중...</span>
-          </div>
-          <div v-else-if="historyError" class="sidebar-state-msg sidebar-state-muted">
-            <span>대화 기록을 불러오지 못했습니다.</span>
-          </div>
-          <div v-else-if="!historyList.length" class="sidebar-state-msg sidebar-state-muted">
-            <span>저장된 대화 기록이 없습니다.</span>
-          </div>
-          <div v-else>
-            <div v-for="group in groupedHistory" :key="group.label">
-              <div class="sidebar-group-label">{{ group.label }}</div>
-              <button
-                v-for="item in group.items"
-                :key="item.id"
-                class="sidebar-item"
-                @click="selectHistory(item)"
-              >{{ item.query }}</button>
-            </div>
-          </div>
-        </div>
-      </template>
-
-      <div class="sidebar-spacer"></div>
-
-      <!-- 하단 사용자 영역 -->
-      <div class="sidebar-bottom">
-        <div class="sidebar-divider"></div>
-
-        <!-- 테마 토글 버튼 -->
-        <button class="sidebar-nav-item" @click="toggleTheme" :title="isDark ? '밝게' : '어둡게'">
-          <i class="bi" :class="isDark ? 'bi-sun-fill' : 'bi-moon-fill'"></i>
-          <span v-if="sidebarOpen">{{ isDark ? '밝게' : '어둡게' }}</span>
-        </button>
-
-        <!-- 로그인 상태 -->
-        <div v-if="currentUser" class="sidebar-user-row" :title="!sidebarOpen ? (currentUser.name || currentUser.email) : ''">
-          <div class="sidebar-avatar">{{ (currentUser.name || currentUser.email || '?')[0].toUpperCase() }}</div>
-          <div v-if="sidebarOpen" class="sidebar-user-text">
-            <span class="sidebar-user-name">{{ currentUser.name || currentUser.email }}</span>
-            <span v-if="currentUser.deptName" class="sidebar-user-dept">{{ currentUser.deptName }}</span>
-          </div>
-          <button v-if="sidebarOpen" class="sidebar-logout-btn" @click="handleLogout" title="로그아웃">
-            <i class="bi bi-box-arrow-right"></i>
-          </button>
-        </div>
-
-        <!-- 비로그인 -->
-        <button v-else class="sidebar-nav-item" @click="openModal" :title="!sidebarOpen ? '로그인' : ''">
-          <i class="bi bi-person"></i>
-          <span v-if="sidebarOpen">로그인</span>
-        </button>
-      </div>
-    </aside>
 
     <!-- ── 콘텐츠 영역 ── -->
     <div class="content-area flex-grow-1 d-flex overflow-hidden position-relative">
@@ -307,40 +114,27 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { ref, onMounted } from 'vue'
 import SearchBar from '../components/home/SearchBar.vue'
 import CategoryCard from '../components/home/CategoryCard.vue'
 import ChatWindow from '../components/home/ChatWindow.vue'
 import DocumentPanel from '../components/home/DocumentPanel.vue'
+import AppSidebar from '../components/common/AppSidebar.vue'
 import { useErrorModal } from '../composables/useErrorModal'
 import { useQuestionHistory } from '../composables/useQuestionHistory'
 import chatbotWebhook from '../webhook/chatbotWebhook.js'
-import historyWebhook from '../webhook/historyWebhook.js'
 import saveHistoryWebhook from '../webhook/saveHistoryWebhook.js'
 
-const router = useRouter()
 const { top5, recordQuestion, refresh: refreshHistory } = useQuestionHistory()
 
-// ── 사이드바 상태 ─────────────────────────────────────────────
-const sidebarOpen = ref(true)
+// ── 사이드바 ref ──────────────────────────────────────────────
+const sidebarRef = ref(null)
 
-// ── 테마 (다크/라이트) ─────────────────────────────────────────
-const isDark = ref(false)
-
-const applyTheme = (dark) => {
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
-}
-
-const toggleTheme = () => {
-  isDark.value = !isDark.value
-  applyTheme(isDark.value)
-  localStorage.setItem('hnix_theme', isDark.value ? 'dark' : 'light')
-}
-
-// ── 사용자 세션 (hnix_user) ──────────────────────────────────
+// ── 사용자 세션 (사이드바 이벤트와 동기화) ──────────────────
 const currentUser = ref(null)
+
+const onLogin = (user) => { currentUser.value = user }
+const onLogout = () => { currentUser.value = null }
 
 // ── 접근 거부 메시지 ─────────────────────────────────────────
 const accessDeniedMessage = ref('')
@@ -352,18 +146,12 @@ const showAccessDenied = (msg) => {
   accessDeniedTimer = setTimeout(() => { accessDeniedMessage.value = '' }, 5000)
 }
 
-onMounted(async () => {
-  // 저장된 테마 복원
-  const savedTheme = localStorage.getItem('hnix_theme') || 'light'
-  isDark.value = savedTheme === 'dark'
-  applyTheme(isDark.value)
-
+onMounted(() => {
   try {
     const stored = localStorage.getItem('hnix_user')
     if (stored) currentUser.value = JSON.parse(stored)
   } catch { currentUser.value = null }
 
-  // 라우트 가드에서 설정한 접근 거부 메시지 확인
   const deniedMsg = sessionStorage.getItem('accessDeniedMessage')
   if (deniedMsg) {
     showAccessDenied(deniedMsg)
@@ -371,194 +159,10 @@ onMounted(async () => {
   }
 
   refreshHistory()
-  loadDepartments()
-  if (currentUser.value?.email) await loadHistory()
-})
-
-const handleLogout = () => {
-  localStorage.removeItem('hnix_user')
-  currentUser.value = null
-  historyList.value = []
-}
-
-// ── 대화 기록 ────────────────────────────────────────────────
-const historyList = ref([])
-const historyLoading = ref(false)
-const historyError = ref('')
-
-const loadHistory = async () => {
-  if (!currentUser.value?.email) return
-  historyLoading.value = true
-  historyError.value = ''
-  try {
-    historyList.value = await historyWebhook(currentUser.value.email)
-  } catch {
-    historyError.value = '대화 기록을 불러오지 못했습니다.'
-  } finally {
-    historyLoading.value = false
-  }
-}
-
-// openHistory는 더 이상 토글로 쓰지 않음 — 모달 열기용으로만 남김
-const openHistory = () => {}
-
-const formatDate = (iso) => {
-  if (!iso) return ''
-  const d = new Date(iso)
-  return d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
-
-const groupedHistory = computed(() => {
-  if (!historyList.value.length) return []
-
-  // 최신순 정렬 후 5개만 표시 (6번째부터는 사라짐)
-  const recent = [...historyList.value]
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 5)
-
-  const now = new Date()
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const startOfYesterday = new Date(startOfToday.getTime() - 86400000)
-  const startOfWeek = new Date(startOfToday.getTime() - 7 * 86400000)
-  const groups = { today: [], yesterday: [], week: [], older: [] }
-
-  recent.forEach(item => {
-    const d = new Date(item.createdAt)
-    const day = new Date(d.getFullYear(), d.getMonth(), d.getDate())
-    if (day >= startOfToday) groups.today.push(item)
-    else if (day >= startOfYesterday) groups.yesterday.push(item)
-    else if (day >= startOfWeek) groups.week.push(item)
-    else groups.older.push(item)
-  })
-
-  return [
-    { label: '오늘', items: groups.today },
-    { label: '어제', items: groups.yesterday },
-    { label: '이번 주', items: groups.week },
-    { label: '이전', items: groups.older },
-  ].filter(g => g.items.length > 0)
 })
 
 const selectHistory = (item) => {
   handleSearch(item.query, '')
-}
-
-// ── 로그인/회원가입 모달 ─────────────────────────────────────
-const API_BASE = import.meta.env.VITE_APP_API_BASE  // /api-proxy
-
-const showLoginModal = ref(false)
-const authMode = ref('login') // 'login' | 'register'
-const loginLoading = ref(false)
-const loginForm = ref({ email: '', password: '' })
-const registerForm = ref({ email: '', name: '', phone: '', password: '', passwordConfirm: '', deptId: '' })
-const loginAlert = ref({ show: false, type: 'danger', text: '' })
-
-// ── 토스트 ────────────────────────────────────────────────────
-const toast = ref({ show: false, type: 'success', text: '' })
-let toastTimer = null
-const showToast = (type, text, duration = 3000) => {
-  if (toastTimer) clearTimeout(toastTimer)
-  toast.value = { show: true, type, text }
-  toastTimer = setTimeout(() => { toast.value.show = false }, duration)
-}
-
-// 팀 목록 — FastAPI /departments 에서 동적으로 로드
-const departments = ref([])
-
-// API 실패 시 사용할 폴백 부서 목록
-const DEPT_FALLBACK = [
-  { id: '65afa76a-2876-46b7-a293-8c4b4150d357', name: 'HD현대개발팀' },
-  { id: '65d0de11-e641-4a2e-b164-8e18edb30bd4', name: 'HD현대운영팀' },
-  { id: '611522e2-63bc-409a-9944-a391af21753b', name: 'HD현대함정,중형선팀' },
-  { id: '29b1e57a-4bce-4e67-9c75-33a69d2fed05', name: 'AX추진팀' },
-  { id: '855ce555-c32a-4593-91e5-350593895d21', name: 'AX전략팀' },
-]
-
-const loadDepartments = async () => {
-  try {
-    const { data } = await axios.get(`${API_BASE}/lab1/api/departments`)
-    const list = (Array.isArray(data) ? data : data.data ?? [])
-      .map(d => ({ id: d.id ?? d.uuid ?? '', name: d.name ?? d.dept_name ?? d.deptName ?? '' }))
-      .filter(d => d.id && d.name)
-    departments.value = list.length ? list : DEPT_FALLBACK
-  } catch {
-    departments.value = DEPT_FALLBACK
-  }
-}
-
-const showLoginAlert = (type, text) => {
-  loginAlert.value = { show: true, type, text }
-  setTimeout(() => { loginAlert.value.show = false }, 3000)
-}
-
-const closeModal = () => {
-  showLoginModal.value = false
-  loginAlert.value.show = false
-  loginForm.value = { email: '', password: '' }
-  registerForm.value = { email: '', name: '', phone: '', password: '', passwordConfirm: '', deptId: '' }
-}
-
-const openModal = () => {
-  showLoginModal.value = true
-}
-
-const doLogin = async () => {
-  loginLoading.value = true
-  try {
-    const { data } = await axios.post(`${API_BASE}/lab1/api/users/detail`, {
-      email: loginForm.value.email
-    })
-    const user = Array.isArray(data) ? data[0] : (data.data ?? data)
-    if (!user || !user.email) {
-      return showLoginAlert('danger', '등록되지 않은 이메일입니다.')
-    }
-    // 서버에서 비밀번호를 반환하므로 클라이언트에서 검증
-    if (user.password !== loginForm.value.password) {
-      return showLoginAlert('danger', '비밀번호가 일치하지 않습니다.')
-    }
-    // 부서명 조회 (departments 목록에서 매핑)
-    const dept = departments.value.find(d => d.id === (user.deptId ?? user.dept_id ?? user.department_id))
-    currentUser.value = {
-      email: user.email,
-      name: user.name,
-      deptName: user.deptName ?? user.dept_name ?? dept?.name ?? '',
-      isAdmin: user.isAdmin ?? false
-    }
-    localStorage.setItem('hnix_user', JSON.stringify(currentUser.value))
-    closeModal()
-    loadHistory()
-  } catch {
-    showLoginAlert('danger', '로그인 중 오류가 발생했습니다.')
-  } finally {
-    loginLoading.value = false
-  }
-}
-
-const doRegister = async () => {
-  const { email, name, phone, password, passwordConfirm, deptId } = registerForm.value
-  if (!email || !name || !password || !passwordConfirm || !deptId) {
-    return showLoginAlert('danger', '필수 항목을 모두 입력해주세요.')
-  }
-  if (password !== passwordConfirm) {
-    return showLoginAlert('danger', '비밀번호가 일치하지 않습니다.')
-  }
-  loginLoading.value = true
-  try {
-    await axios.post(`${API_BASE}/lab1/api/register`, { email, name, phone, password, deptId })
-    closeModal()
-    registerForm.value = { email: '', name: '', phone: '', password: '', passwordConfirm: '', deptId: '' }
-    showToast('success', '회원가입이 완료되었습니다.')
-  } catch (err) {
-    const status = err.response?.status
-    if (status === 409) {
-      showLoginAlert('danger', '이미 회원 가입된 사용자입니다.')
-    } else {
-      const msg = err.response?.data?.detail ?? err.response?.data?.message ?? '회원가입 중 오류가 발생했습니다.'
-      showLoginAlert('danger', msg)
-    }
-  } finally {
-    loginLoading.value = false
-  }
 }
 
 // 모든 카테고리 정의
@@ -677,7 +281,7 @@ const handleSearch = async (query, className = '', isHidden = false) => {
     // 로그인 상태일 때 대화 내용 저장 후 사이드바 갱신
     if (currentUser.value?.email) {
       saveHistoryWebhook(currentUser.value.email, query, botResponse.answer, sessionId.value)
-        .then(() => loadHistory())
+        .then(() => sidebarRef.value?.loadHistory())
         .catch(() => {})
     }
   } catch (error) {
@@ -720,17 +324,38 @@ const resetToHome = () => {
   isChatActive.value = false
   currentCategoryClass.value = ''
   sessionId.value = generateSessionId()
-  if (currentUser.value?.email) loadHistory()
+  if (currentUser.value?.email) sidebarRef.value?.loadHistory()
 }
 </script>
 
 <style scoped>
 .home-container {
-  background-color: transparent; /* 전체 배경 투명하게 하여 ChatWindow 배경이 보이도록 */
+  background-color: transparent;
 }
 
 .content-area {
-  min-width: 0; /* flex child가 overflow 처리되도록 */
+  min-width: 0;
+}
+
+/* 접근 거부 토스트 */
+.access-denied-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 4px 20px var(--shadow-medium);
+  white-space: nowrap;
+  pointer-events: none;
+  background: var(--error-color);
+  color: #fff;
 }
 
 /* Welcome Screen Animations */

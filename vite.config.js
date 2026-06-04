@@ -10,7 +10,7 @@ export default defineConfig({
     proxy: {
       // /api-proxy/* → FastAPI 백엔드 (49.50.131.163:8080, nginx 경유)
       '/api-proxy': {
-        target: 'http://localhost:6100',
+        target: 'http://127.0.0.1:6100',
         changeOrigin: true,
         rewrite: path => path.replace(/^\/api-proxy/, ''),
       },

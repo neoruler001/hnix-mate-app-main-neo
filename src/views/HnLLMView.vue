@@ -1,4 +1,6 @@
 <template>
+  <div class="hnllm-page-layout">
+    <AppSidebar />
   <div class="hnllm-wrap">
     <!-- 배경 floating 아이콘 -->
     <div class="bg-icons" aria-hidden="true">
@@ -12,9 +14,6 @@
     <!-- 헤더 -->
     <header class="hnllm-header glass-panel">
       <div class="header-left">
-        <RouterLink to="/" class="back-btn" title="홈으로">
-          <i class="bi bi-arrow-left-short"></i>
-        </RouterLink>
         <div class="header-brand">
           <span class="brand-dot"></span>
           <span class="brand-name">HN <span class="brand-accent">LLM</span></span>
@@ -176,11 +175,13 @@
       </div>
     </Transition>
   </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import axios from 'axios'
+import AppSidebar from '../components/common/AppSidebar.vue'
 
 // ─── 상태 ──────────────────────────────────────────────────────
 const API_BASE = import.meta.env.VITE_APP_API_BASE   // /api-proxy
@@ -389,10 +390,18 @@ const showToast = (type, text) => {
 
 <style scoped>
 /* ─── 전체 레이아웃 ─────────────────────────────────────────── */
+.hnllm-page-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
 .hnllm-wrap {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
   background: linear-gradient(135deg, var(--gradient-from) 0%, var(--gradient-via) 33%, var(--gradient-to) 66%, var(--gradient-from) 100%);
   background-size: 400% 400%;
   animation: gradientShift 20s ease infinite;

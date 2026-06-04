@@ -1,7 +1,10 @@
 <template>
-  <div class="upload-container d-flex flex-column h-100 position-relative overflow-hidden">
-    
-    <!-- 메인화면과 동일한 파스텔 미널 그라데이션 배경 (HomeView와 완전 일치) -->
+  <div class="page-layout d-flex h-100 overflow-hidden">
+    <AppSidebar />
+
+    <div class="upload-container d-flex flex-column flex-grow-1 position-relative overflow-hidden">
+
+    <!-- 파스텔 미널 그라데이션 배경 -->
     <div class="animated-background">
       <i class="bi bi-chat-heart floating-icon icon-1"></i>
       <i class="bi bi-journal-check floating-icon icon-2"></i>
@@ -24,14 +27,6 @@
       <i class="bi bi-diagram-2 floating-icon icon-19"></i>
       <i class="bi bi-headset floating-icon icon-20"></i>
     </div>
-
-    <!-- 고정 상단 네비게이션 -->
-    <header class="page-topbar d-flex justify-content-between align-items-center px-4 py-3 border-bottom" style="z-index: 10;">
-      <div class="d-flex align-items-center gap-2 logo-home" @click="router.push('/')" role="button" title="홈으로">
-        <img src="/HNIX-CI.png" alt="HNIX" style="height: 22px;" />
-        <span class="fw-bold text-primary-ci fs-5">지식 학습</span>
-      </div>
-    </header>
 
     <!-- Main Card Content -->
     <div class="d-flex align-items-center justify-content-center flex-grow-1 p-4" style="z-index: 2; overflow-y: auto;">
@@ -115,11 +110,13 @@
       </div>
     </div>
   </div>
+  </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import AppSidebar from '../components/common/AppSidebar.vue'
 import fileUploadWebhook from '../webhook/fileUploadWebhook'
 import { useErrorModal } from '../composables/useErrorModal'
 
@@ -223,6 +220,10 @@ const formatSize = (bytes) => {
 </script>
 
 <style scoped>
+.page-layout {
+  height: 100vh;
+}
+
 .page-topbar {
   background: var(--modal-bg);
   backdrop-filter: blur(12px);
