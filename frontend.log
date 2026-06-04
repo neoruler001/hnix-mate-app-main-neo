@@ -1,0 +1,12 @@
+
+> hnix-mate-app@0.0.0 dev
+> vite
+
+[2mPM 4:08:53[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because lockfile has changed
+
+  [32m[1mVITE[22m v7.3.1[39m  [2mready in [0m[1m783[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5174[22m/lab1/hnix-mate-app/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://10.13.51.96:[1m5174[22m/lab1/hnix-mate-app/[39m
+[2mPM 4:09:15[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ new dependencies optimized: [33mcrypto[32m[39m
+[2mPM 4:09:15[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ optimized dependencies changed. reloading[39m
