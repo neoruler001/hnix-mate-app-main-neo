@@ -118,3 +118,11 @@ Private
 ## 📞 문의
 
 프로젝트 관련 문의사항은 개발팀에 연락해주세요.
+
+## 🖼️ 화면 캡처
+
+<img src="public/1.gif" alt="화면 캡처 1" width="100%">
+<img src="public/2.avif" alt="화면 캡처 2" width="100%">
+<img src="public/3.gif" alt="화면 캡처 3" width="100%">
+<img src="public/4.gif" alt="화면 캡처 4" width="100%">
+<img src="public/5.gif" alt="화면 캡처 5" width="100%">
